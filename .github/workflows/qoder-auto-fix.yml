@@ -30,3 +30,7 @@ jobs:
             ISSUE_NUMBER:${{ github.event.issue.number }}
             ISSUE_TITLE:${{ github.event.issue.title }}
             ISSUE_BODY:${{ github.event.issue.body }}
+
+# NOTE: Issue auto-fix is a GitLab CI-specific feature.
+# This workflow is a placeholder for future GitHub Actions support.
+# Currently, Qoder Action does not support automatic issue fixing on GitHub.
