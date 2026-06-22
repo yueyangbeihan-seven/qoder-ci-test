@@ -89,4 +89,6 @@ def get_config():
 if __name__ == "__main__":
     app.run(debug=True)
 
-
+@app.route("/health", methods=["GET"])
+def health_check():
+    return jsonify({"status": "healthy"})
