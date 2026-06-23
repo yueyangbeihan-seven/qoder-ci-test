@@ -1,0 +1,56 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Gate 1: AI Code Review
+  qoder-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: QoderAI/qoder-action@v0
+        with:
+          qoder_personal_access_token: ${{ secrets.QODER_PERSONAL_ACCESS_TOKEN }}
+          prompt: |
+            /review-pr
+            REPO:${{ github.repository }} PR_NUMBER:${{ github.event.pull_request.number }}
+
+  # Gate 2: Build and Test（CR 完成后才跑）
+  build-and-test:
+    needs: qoder-review    # ✅ 同一文件内，可以依赖
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Run unit tests
+        run: pytest test_app.py -v
+      - name: Start Flask app
+        run: |
+          python app.py &
+          sleep 3
+      - name: API smoke test - register
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:5000/register \
+            -H "Content-Type: application/json" \
+            -d '{"username":"testuser","password":"testpass"}')
+          if [ "$STATUS" != "200" ]; then echo "FAIL"; exit 1; fi
+      - name: API smoke test - login
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:5000/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"testuser","password":"testpass"}')
+          if [ "$STATUS" != "200" ]; then echo "FAIL"; exit 1; fi
