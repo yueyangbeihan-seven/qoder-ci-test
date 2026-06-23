@@ -73,6 +73,10 @@ def get_config():
         "db_password": DB_PASSWORD,
         "api_key": API_KEY
     })
+@app.route("/version", methods=["GET"])
+def version():
+    return jsonify({"version": "1.0.4"})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
