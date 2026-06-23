@@ -23,9 +23,9 @@ jobs:
             /review-pr
             REPO:${{ github.repository }} PR_NUMBER:${{ github.event.pull_request.number }}
 
-  # Gate 2: Build and Test（CR 完成后才跑）
+  # Gate 2: Build and Test
   build-and-test:
-    needs: qoder-review    # ✅ 同一文件内，可以依赖
+    needs: qoder-review
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +36,8 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install pytest
+      - name: Run unit tests
+        run: pytest test_app.py -v
       - name: Start Flask app
         run: |
           python app.py &
