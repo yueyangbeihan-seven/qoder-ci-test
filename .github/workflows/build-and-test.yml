@@ -6,8 +6,6 @@ on:
 
 jobs:
   build-and-test:
-    # 关键：等 CR 通过后才跑测试，CR 没过不浪费资源
-    needs: qoder-review
     runs-on: ubuntu-latest
 
     steps:
