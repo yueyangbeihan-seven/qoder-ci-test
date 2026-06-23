@@ -88,7 +88,7 @@ def get_config():
 
 @app.route("/version", methods=["GET"])
 def version():
-    return jsonify({"version": "1.0.1"})
+    return jsonify({"version": "1.0.2"})
 
 
 if __name__ == "__main__":
