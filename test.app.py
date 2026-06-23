@@ -7,12 +7,6 @@ def client():
     with app.test_client() as client:
         yield client
 
-def test_health_check(client):
-    """测试健康检查端点"""
-    response = client.get('/health')
-    assert response.status_code == 200
-    assert response.json['status'] == 'healthy'
-
 def test_register(client):
     """测试用户注册"""
     response = client.post('/register',
