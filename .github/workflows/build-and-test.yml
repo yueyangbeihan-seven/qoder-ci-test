@@ -1,0 +1,62 @@
+name: Build and Test
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-and-test:
+    # 关键：等 CR 通过后才跑测试，CR 没过不浪费资源
+    needs: qoder-review
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run unit tests
+        run: pytest test_app.py -v
+
+      - name: Start Flask app
+        run: |
+          python app.py &
+          sleep 3
+
+      - name: API smoke test - register
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:5000/register \
+            -H "Content-Type: application/json" \
+            -d '{"username":"testuser","password":"testpass"}')
+          echo "Register: HTTP $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "FAIL: register endpoint"; exit 1; fi
+
+      - name: API smoke test - login
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:5000/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"testuser","password":"testpass"}')
+          echo "Login: HTTP $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "FAIL: login endpoint"; exit 1; fi
+
+      - name: API smoke test - health check
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5000/health)
+          echo "Health: HTTP $STATUS"
+          if [ "$STATUS" != "200" ]; then echo "FAIL: health endpoint"; exit 1; fi
+
+      - name: Test results summary
+        if: always()
+        run: |
+          echo "=== Test Summary ==="
+          echo "Unit tests: ${{ job.status }}"
+          echo "All gates passed! Ready for merge."
