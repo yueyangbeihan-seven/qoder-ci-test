@@ -1,3 +1,12 @@
+
+def init_db():
+    conn = sqlite3.connect('users.db')
+    conn.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT, password TEXT)')
+    conn.commit()
+    conn.close()
+
+init_db()  # 启动时初始化
+
 from flask import Flask, request, jsonify
 import sqlite3
 import hashlib
